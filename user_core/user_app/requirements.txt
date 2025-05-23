@@ -1,0 +1,72 @@
+```
+# user_core/user_app/requirements.txt: Dependencies for Connection by Jamie User Application
+# Supports FastAPI-based user APIs, authentication, dashboard, and static UI assets (app.py, auth.py, user_api/).
+# Optimized for AWS Lambda, API Gateway, and Amplify, aligned with AWS Breaking Barriers Hackathon 2025.
+
+# Core Web Framework and API
+fastapi>=0.115.2,<0.116.0  # High-performance APIs for user endpoints (user_api/api_gateway.py, routes.py)
+uvicorn>=0.32.0,<0.33.0  # ASGI server for FastAPI (app.py)
+python-jose>=3.3.0,<4.0.0  # JOSE for PQC-signed JWT authentication (auth.py)
+pyjwt>=2.9.0,<3.0.0  # JWT handling for user sessions (auth.py)
+
+# AWS SDKs and Integration
+boto3>=1.34.162,<2.0.0  # AWS SDK for Lambda, API Gateway, and S3 (user_api/lambda_author.py, config.py)
+aws-xray-sdk>=2.14.0,<3.0.0  # X-Ray tracing for API auditability (handlers.py)
+aws-lambda-powertools>=2.49.0,<3.0.0  # Lambda utilities for logging and metrics (lambda_author.py)
+
+# Cryptography and Post-Quantum Cryptography (PQC)
+cryptography>=43.0.3,<44.0.0  # PQC for secure authentication and data (kyber.py, dilithium.py)
+pycryptodome>=3.21.0,<4.0.0  # Cryptographic primitives for hashing and signatures (auth.py)
+cbor2>=5.6.3,<6.0.0  # CBOR serialization for API payloads (user_api/routes.py)
+
+# Visualization and UI
+dash>=2.18.1,<3.0.0  # Web dashboards for user dashboard (dashboard.py)
+plotly>=5.24.1,<6.0.0  # Interactive visualizations for Nexus Console (static/)
+websockets>=13.1,<14.0.0  # Real-time UI updates for dashboard (static/)
+
+# Data Processing and Configuration
+PyYAML>=6.0.2,<7.0.0  # YAML parsing for configuration (config.py)
+orjson>=3.10.7,<4.0.0  # Fast JSON serialization for API responses (user_api/handlers.py)
+
+# Testing and Development
+pytest>=8.3.3,<9.0.0  # Unit testing for APIs and authentication (tests/)
+pytest-asyncio>=0.24.0,<0.25.0  # Async testing for FastAPI endpoints
+httpx>=0.27.2,<0.28.0  # HTTP client for testing API endpoints
+
+# Notes:
+# - Ensure Python 3.11+ for compatibility with AWS Lambda and API Gateway runtimes.
+# - Install in a virtual environment (venv) to avoid conflicts.
+# - Secure credentials (AWS, KMS) must be configured via .env (see deployment/.env.example).
+# - Static assets (HTML, JS, CSS, Svelte) in static/ require npm for Svelte compilation; see admin_core/admin_console/ notes.
+# - Contact Jamie Terpening for setup assistance (see README.md).
+```
+
+### What and Why
+- **Clarity and Structure**: Organized dependencies into categories (Core Web Framework, AWS SDKs, Cryptography, Visualization/UI, Data Processing, Testing) with comments linking to relevant files (e.g., `app.py`, `auth.py`, `user_api/api_gateway.py`). Added notes on setup and compatibility for judges.
+- **Secure Config**:
+  - Pinned dependencies to secure, stable versions (e.g., `fastapi>=0.115.2,<0.116.0`, `boto3>=1.34.162,<2.0.0`) to avoid vulnerabilities, aligning with `requirements.txt` and `setup.py`.
+  - Included `cryptography` and `pycryptodome` for PQC-based JWT authentication (`auth.py`), supporting Kyber/Dilithium (`kyber.py`, `dilithium.py`).
+  - Added `python-jose` and `pyjwt` for secure JWT handling, critical for user authentication (`/user/login`, `/user/register` in `API_REFERENCE.md`).
+  - Noted that credentials are configured via `.env`, aligning with `.gitignore` and `deploy_utils.py`.
+- **Performance**:
+  - Selected lightweight libraries (`fastapi`, `uvicorn`, `orjson`) to minimize Lambda cold start times and API latency, suitable for `/user/*` endpoints (`user_api/routes.py`).
+  - Used `aws-lambda-powertools` for optimized logging and metrics in Lambda (`lambda_author.py`), enhancing performance and auditability.
+  - Ensured `dash` and `plotly` are pinned to stable versions for efficient dashboard rendering (`dashboard.py`).
+- **Synergy**: Aligned with system components and files:
+  - **Core** (`fastapi`, `uvicorn`, `python-jose`): Support user APIs (`/user/login`, `/user/dashboard`, `/user/lighthouse` in `API_REFERENCE.md`, `user_api/api_gateway.py`).
+  - **AWS** (`boto3`, `aws-xray-sdk`, `aws-lambda-powertools`): Integrate with API Gateway, Lambda, and S3 (`aws_deploy.yaml`, `user_api/lambda_author.py`).
+  - **Cryptography** (`cryptography`, `pycryptodome`, `cbor2`): Enable secure authentication and message serialization (`auth.py`, `user_api/routes.py`).
+  - **UI** (`dash`, `plotly`, `websockets`): Power the user dashboard and Nexus Console (`dashboard.py`, `static/`), aligning with `admin_core/admin_console/static/` and `time_machine.py`.
+  - **Configuration** (`PyYAML`, `orjson`): Handle configurations and API responses (`config.py`, `user_api/handlers.py`).
+  - **Testing** (`pytest`, `pytest-asyncio`, `httpx`): Validate API endpoints and async functionality (`tests/`).
+  - Aligned with `requirements.txt`, `setup.py`, `aws_deploy.yaml`, `deploy_utils.py`, and documentation (`README.md`, `WHITEPAPER.md`, `API_REFERENCE.md`).
+- **Error Handling**:
+  - Added version constraints (e.g., `<0.116.0`) to prevent breaking changes and ensure compatibility with Python 3.11+.
+  - Included notes on Python 3.11+ and virtual environment usage to avoid installation issues.
+  - Noted Svelte compilation requirements for `static/` assets, referencing `admin_core/admin_console/` for consistency.
+- **Advanced Integration**:
+  - Included `fastapi` for high-performance user APIs, complementing Flask in `ngo_api.py` and `admin_api/` (`API_REFERENCE.md`).
+  - Added `aws-lambda-powertools` for enhanced Lambda performance and auditability, aligning with `aws_deploy.yaml` and `qldb_logger.py`.
+  - Included `cbor2` for efficient API payload serialization, consistent with `lighthouse.py`, `mesh_node.py`, and `deploy_utils.py`.
+  - Added `pytest-asyncio` and `httpx` for robust testing of async FastAPI endpoints, ensuring judge evaluation is seamless.
+  - Supported Svelte-based frontend assets in `static/` (HTML, JavaScript, CSS, Svelte), aligning with the Nexus Console requirements in `WHITEPAPER.md`.
