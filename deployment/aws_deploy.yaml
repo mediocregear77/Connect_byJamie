@@ -1,0 +1,412 @@
+```yaml
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Connection byJamie - Quantum-secure, user-sovereign mesh network infrastructure deployment.
+  Deploys VPC, EC2, Lambda, S3, DynamoDB, SageMaker, Greengrass, IoT Core, API Gateway, QLDB, Amplify, and Hyperledger Fabric.
+
+Parameters:
+  Environment:
+    Description: Deployment environment (e.g., dev, prod)
+    Type: String
+    Default: prod
+    AllowedValues: [dev, test, prod]
+    ConstraintDescription: Must be dev, test, or prod
+  AWSAccountId:
+    Description: AWS Account ID for IAM roles and resource ARNs
+    Type: String
+    Default: YOUR_AWS_ACCOUNT_ID
+    ConstraintDescription: Must be a valid 12-digit AWS Account ID
+  KMSKeyArn:
+    Description: ARN of KMS key for encryption
+    Type: String
+    Default: arn:aws:kms:us-east-1:YOUR_AWS_ACCOUNT_ID:key/YOUR_KMS_KEY_ID
+    ConstraintDescription: Must be a valid KMS key ARN
+  FabricNetworkId:
+    Description: Hyperledger Fabric Network ID
+    Type: String
+    Default: n-xxxxxxxx
+    ConstraintDescription: Must be a valid Managed Blockchain Network ID
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterLabels:
+      Environment: { default: "Environment" }
+      AWSAccountId: { default: "AWS Account ID" }
+      KMSKeyArn: { default: "KMS Key ARN" }
+      FabricNetworkId: { default: "Fabric Network ID" }
+
+Conditions:
+  IsProd: !Equals [!Ref Environment, prod]
+
+Resources:
+  # VPC Configuration
+  ConnectionVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub "connection-byjamie-${Environment}-vpc"
+
+  ConnectionSubnetPublicA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref ConnectionVPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub "connection-byjamie-${Environment}-public-a"
+
+  ConnectionSubnetPublicB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref ConnectionVPC
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub "connection-byjamie-${Environment}-public-b"
+
+  ConnectionInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub "connection-byjamie-${Environment}-igw"
+
+  ConnectionVPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref ConnectionVPC
+      InternetGatewayId: !Ref ConnectionInternetGateway
+
+  ConnectionRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref ConnectionVPC
+      Tags:
+        - Key: Name
+          Value: !Sub "connection-byjamie-${Environment}-rt"
+
+  ConnectionRoute:
+    Type: AWS::EC2::Route
+    DependsOn: ConnectionVPCGatewayAttachment
+    Properties:
+      RouteTableId: !Ref ConnectionRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref ConnectionInternetGateway
+
+  ConnectionSubnetRouteTableAssociationA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref ConnectionSubnetPublicA
+      RouteTableId: !Ref ConnectionRouteTable
+
+  ConnectionSubnetRouteTableAssociationB:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref ConnectionSubnetPublicB
+      RouteTableId: !Ref ConnectionRouteTable
+
+  # S3 Bucket for Data and Code
+  ConnectionS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "connection-byjamie-${Environment}-data"
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+              KMSMasterKeyID: !Ref KMSKeyArn
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Name
+          Value: !Sub "connection-byjamie-${Environment}-data"
+
+  # DynamoDB for Mesh State
+  ConnectionDynamoDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "connection-byjamie-${Environment}-mesh"
+      AttributeDefinitions:
+        - AttributeName: node_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: node_id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !Ref KMSKeyArn
+      Tags:
+        - Key: Name
+          Value: !Sub "connection-byjamie-${Environment}-mesh"
+
+  # QLDB for Immutable Audit Logs
+  ConnectionQLDB:
+    Type: AWS::QLDB::Ledger
+    Properties:
+      Name: !Sub "connection-byjamie-${Environment}-qldb"
+      PermissionsMode: STANDARD
+      DeletionProtection: !If [IsProd, true, false]
+      Tags:
+        - Key: Name
+          Value: !Sub "connection-byjamie-${Environment}-qldb"
+
+  # API Gateway for Public APIs
+  MeshApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub "connection-byjamie-${Environment}-api"
+      EndpointConfiguration:
+        Types: ["REGIONAL"]
+      Description: "API Gateway for Connection byJamie mesh and user APIs"
+      Tags:
+        - Key: Name
+          Value: !Sub "connection-byjamie-${Environment}-api"
+
+  # Lambda Authorizer for API Gateway
+  MeshLambdaAuthorizer:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "connection-byjamie-${Environment}-authorizer"
+      Handler: admin_core.admin_api.lambda_authorizer.lambda_handler
+      Role: !GetAtt MeshIAMRole.Arn
+      Runtime: python3.11
+      Code:
+        S3Bucket: !Ref ConnectionS3Bucket
+        S3Key: lambda/authorizer.zip
+      Timeout: 30
+      MemorySize: 256
+      TracingConfig:
+        Mode: Active
+      Environment:
+        Variables:
+          ENVIRONMENT: !Ref Environment
+          KMS_KEY_ARN: !Ref KMSKeyArn
+      Tags:
+        - Key: Name
+          Value: !Sub "connection-byjamie-${Environment}-authorizer"
+
+  # Greengrass Core Group for Edge Devices
+  GreengrassCoreGroup:
+    Type: AWS::Greengrass::Group
+    Properties:
+      Name: !Sub "connection-byjamie-${Environment}-greengrass-core"
+      Tags:
+        - Key: Name
+          Value: !Sub "connection-byjamie-${Environment}-greengrass-core"
+
+  # IoT Core Policy for Mesh Devices
+  IoTCorePolicy:
+    Type: AWS::IoT::Policy
+    Properties:
+      PolicyName: !Sub "connection-byjamie-${Environment}-iot-policy"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - iot:Connect
+              - iot:Publish
+              - iot:Subscribe
+              - iot:Receive
+            Resource: "*"
+
+  # SageMaker Notebook for AI Model Training
+  BedrockSageMakerNotebook:
+    Type: AWS::SageMaker::NotebookInstance
+    Properties:
+      InstanceType: !If [IsProd, ml.t3.large, ml.t3.medium]
+      NotebookInstanceName: !Sub "connection-byjamie-${Environment}-notebook"
+      RoleArn: !GetAtt MeshIAMRole.Arn
+      KmsKeyId: !Ref KMSKeyArn
+      Tags:
+        - Key: Name
+          Value: !Sub "connection-byjamie-${Environment}-notebook"
+
+  # Kinesis Stream for Real-Time Events
+  MeshKinesisStream:
+    Type: AWS::Kinesis::Stream
+    Properties:
+      Name: !Sub "connection-byjamie-${Environment}-stream"
+      ShardCount: !If [IsProd, 4, 2]
+      RetentionPeriodHours: 168
+      StreamEncryption:
+        EncryptionType: KMS
+        KeyId: !Ref KMSKeyArn
+      Tags:
+        - Key: Name
+          Value: !Sub "connection-byjamie-${Environment}-stream"
+
+  # Amplify App for Nexus Console
+  NexusConsoleAmplify:
+    Type: AWS::Amplify::App
+    Properties:
+      Name: !Sub "connection-byjamie-${Environment}-nexus-console"
+      Repository: !Sub "https://github.com/byjamie/connection-byjamie"
+      BuildSpec: |
+        version: 1.0
+        frontend:
+          phases:
+            preBuild:
+              commands:
+                - npm install
+            build:
+              commands:
+                - npm run build
+          artifacts:
+            baseDirectory: build
+            files:
+              - '**/*'
+          cache:
+            paths:
+              - node_modules/**/*
+      Tags:
+        - Key: Name
+          Value: !Sub "connection-byjamie-${Environment}-nexus-console"
+
+  # Hyperledger Fabric Member for Audit Logging
+  AuditLogFabric:
+    Type: AWS::ManagedBlockchain::Member
+    Properties:
+      NetworkId: !Ref FabricNetworkId
+      MemberConfiguration:
+        Name: !Sub "connection-byjamie-${Environment}-fabric"
+        Description: Connection byJamie audit log Hyperledger Fabric member
+        MemberFrameworkConfiguration:
+          MemberFabricConfiguration:
+            AdminUsername: "admin"
+            AdminPassword: !Sub "{{resolve:secretsmanager:connection-byjamie-${Environment}-fabric-secret:SecretString:password}}"
+      Tags:
+        - Key: Name
+          Value: !Sub "connection-byjamie-${Environment}-fabric"
+
+  # IAM Role for Lambda, Greengrass, SageMaker
+  MeshIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "connection-byjamie-${Environment}-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - greengrass.amazonaws.com
+                - sagemaker.amazonaws.com
+                - iot.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: connection-byjamie-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub "arn:aws:s3:::${ConnectionS3Bucket}/*"
+                  - !Sub "arn:aws:s3:::${ConnectionS3Bucket}"
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:GetItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                Resource: !GetAtt ConnectionDynamoDB.Arn
+              - Effect: Allow
+                Action:
+                  - qldb:SendCommand
+                Resource: !GetAtt ConnectionQLDB.Arn
+              - Effect: Allow
+                Action:
+                  - kinesis:PutRecord
+                  - kinesis:GetRecords
+                  - kinesis:DescribeStream
+                Resource: !GetAtt MeshKinesisStream.Arn
+              - Effect: Allow
+                Action:
+                  - iot:Publish
+                  - iot:Subscribe
+                  - iot:Connect
+                  - iot:Receive
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - greengrass:*
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - sagemaker:*
+                Resource: !Sub "arn:aws:sagemaker:${AWS::Region}:${AWSAccountId}:notebook-instance/*"
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - kms:Encrypt
+                  - kms:Decrypt
+                  - kms:GenerateDataKey
+                Resource: !Ref KMSKeyArn
+              - Effect: Allow
+                Action:
+                  - xray:PutTraceSegments
+                  - xray:PutTelemetryRecords
+                Resource: "*"
+
+  # CloudWatch Log Group for Monitoring
+  MeshLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/connection-byjamie-${Environment}"
+      RetentionInDays: 14
+
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${MeshApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/"
+  S3BucketName:
+    Description: Main S3 bucket for persistent storage
+    Value: !Ref ConnectionS3Bucket
+  QLDBLedgerName:
+    Description: QLDB Ledger Name
+    Value: !Ref ConnectionQLDB
+  DynamoDBTable:
+    Description: Mesh State DynamoDB Table
+    Value: !Ref ConnectionDynamoDB
+  GreengrassGroupId:
+    Description: Greengrass Group ID
+    Value: !Ref GreengrassCoreGroup
+  ManagedBlockchainMember:
+    Description: Hyperledger Fabric Member
+    Value: !Ref AuditLogFabric
+  SageMakerNotebook:
+    Description: Bedrock SageMaker Notebook
+    Value: !Ref BedrockSageMakerNotebook
+  AmplifyAppId:
+    Description: Nexus Console Amplify App ID
+    Value: !Ref NexusConsoleAmplify
+  IoTPolicyName:
+    Description: IoT Core Policy Name
+    Value: !Ref IoTCorePolicy

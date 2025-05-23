@@ -1,0 +1,153 @@
+```yaml
+# mesh_settings.yaml: Optimized Mesh Network Operational Settings for Connection by Jamie
+# Defines parameters for node discovery, routing, consensus, and other network operations.
+# Values can be overridden by environment variables prefixed with MESH_ (e.g., MESH_MESH_ID).
+
+mesh_id: 
+  value: "${MESH_MESH_ID:connection-by-jamie-mainnet}"
+  description: "Unique identifier for the mesh network. Must be globally unique."
+  validation: "string, min_length=8, max_length=64"
+
+node_discovery:
+  method: 
+    value: "${MESH_NODE_DISCOVERY_METHOD:multicast}"
+    description: "Node discovery method (multicast, unicast, or registry)."
+    validation: "enum[multicast, unicast, registry]"
+  beacon_interval_sec: 
+    value: ${MESH_BEACON_INTERVAL_SEC:30}
+    description: "Interval for sending discovery beacons (seconds). Reduced for faster discovery."
+    validation: "integer, min=10, max=300"
+  max_peer_count: 
+    value: ${MESH_MAX_PEER_COUNT:64}
+    description: "Maximum number of peers per node. Increased for larger networks."
+    validation: "integer, min=8, max=128"
+
+routing:
+  protocol: 
+    value: "${MESH_ROUTING_PROTOCOL:pbft}"
+    description: "Routing protocol (pbft, dht, or gossip)."
+    validation: "enum[pbft, dht, gossip]"
+  max_hops: 
+    value: ${MESH_MAX_HOPS:12}
+    description: "Maximum hops for message routing. Slightly increased for redundancy."
+    validation: "integer, min=5, max=20"
+  relay_selection: 
+    value: "${MESH_RELAY_SELECTION:trust_score}"
+    description: "Relay selection strategy (trust_score, latency, or random)."
+    validation: "enum[trust_score, latency, random]"
+  fallback_radio: 
+    value: ["${MESH_FALLBACK_RADIO_1:LoRa}", "${MESH_FALLBACK_RADIO_2:Shortwave}", "${MESH_FALLBACK_RADIO_3:Satellite}"]
+    description: "Fallback radio protocols for connectivity. Added Satellite for extreme conditions."
+    validation: "array, items=enum[LoRa, Shortwave, Satellite, WiFi]"
+
+consensus:
+  algorithm: 
+    value: "${MESH_CONSENSUS_ALGORITHM:pbft}"
+    description: "Consensus algorithm (pbft, raft, or poa)."
+    validation: "enum[pbft, raft, poa]"
+  block_time_sec: 
+    value: ${MESH_BLOCK_TIME_SEC:10}
+    description: "Target block time for consensus (seconds). Reduced for faster transactions."
+    validation: "integer, min=5, max=60"
+  quorum_ratio: 
+    value: ${MESH_QUORUM_RATIO:0.67}
+    description: "Ratio of nodes required for quorum."
+    validation: "float, min=0.51, max=0.9"
+
+quarantine:
+  quarantine_timeout_sec: 
+    value: ${MESH_QUARANTINE_TIMEOUT_SEC:600}
+    description: "Timeout for quarantined nodes (seconds). Increased for stricter isolation."
+    validation: "integer, min=60, max=3600"
+  auto_isolate_on_failure: 
+    value: ${MESH_AUTO_ISOLATE_ON_FAILURE:true}
+    description: "Automatically isolate nodes on repeated failures."
+    validation: "boolean"
+
+health_check:
+  beacon_check_interval_sec: 
+    value: ${MESH_BEACON_CHECK_INTERVAL_SEC:45}
+    description: "Interval for health check beacons (seconds). Reduced for quicker detection."
+    validation: "integer, min=15, max=300"
+  min_uptime_percent: 
+    value: ${MESH_MIN_UPTIME_PERCENT:95}
+    description: "Minimum node uptime percentage for health status."
+    validation: "float, min=80, max=100"
+  alert_threshold_percent: 
+    value: ${MESH_ALERT_THRESHOLD_PERCENT:75}
+    description: "Threshold for triggering health alerts."
+    validation: "float, min=50, max=90"
+
+radio:
+  default_freq_mhz: 
+    value: ${MESH_DEFAULT_FREQ_MHZ:915}
+    description: "Default radio frequency (MHz)."
+    validation: "integer, enum[868, 915, 923]"
+  allowed_freqs_mhz: 
+    value: [${MESH_ALLOWED_FREQS_MHZ_1:868}, ${MESH_ALLOWED_FREQS_MHZ_2:915}, ${MESH_ALLOWED_FREQS_MHZ_3:923}]
+    description: "Allowed radio frequencies (MHz)."
+    validation: "array, items=integer, enum[868, 915, 923]"
+  tx_power_dbm: 
+    value: ${MESH_TX_POWER_DBM:20}
+    description: "Transmission power (dBm). Optimized for range vs. power."
+    validation: "integer, min=10, max=30"
+
+snapshot:
+  auto_snapshot_interval_min: 
+    value: ${MESH_SNAPSHOT_INTERVAL_MIN:15}
+    description: "Interval for automatic network snapshots (minutes). Reduced for frequent backups."
+    validation: "integer, min=5, max=60"
+  snapshot_retention_days: 
+    value: ${MESH_SNAPSHOT_RETENTION_DAYS:14}
+    description: "Retention period for snapshots (days). Increased for longer recovery window."
+    validation: "integer, min=1, max=30"
+
+logging:
+  log_level: 
+    value: "${MESH_LOG_LEVEL:INFO}"
+    description: "Logging level (DEBUG, INFO, WARNING, ERROR)."
+    validation: "enum[DEBUG, INFO, WARNING, ERROR]"
+  log_rotation_days: 
+    value: ${MESH_LOG_ROTATION_DAYS:7}
+    description: "Days to retain logs before rotation. Increased for auditing."
+    validation: "integer, min=1, max=30"
+
+trust:
+  min_trust_score: 
+    value: ${MESH_MIN_TRUST_SCORE:0.3}
+    description: "Minimum trust score for node participation. Lowered for inclusivity."
+    validation: "float, min=0.1, max=0.5"
+  max_trust_score: 
+    value: ${MESH_MAX_TRUST_SCORE:1.0}
+    description: "Maximum trust score."
+    validation: "float, min=0.5, max=1.0"
+  default_trust_score: 
+    value: ${MESH_DEFAULT_TRUST_SCORE:0.7}
+    description: "Default trust score for new nodes. Slightly reduced for caution."
+    validation: "float, min=0.5, max=0.9"
+
+security:
+  key_management: 
+    value: "${MESH_KEY_MANAGEMENT:kms}"
+    description: "Key management system (kms, tpm, or local)."
+    validation: "enum[kms, tpm, local]"
+  audit_log_enabled: 
+    value: ${MESH_AUDIT_LOG_ENABLED:true}
+    description: "Enable QLDB audit logging for all operations."
+    validation: "boolean"
+  pqc_enabled: 
+    value: ${MESH_PQC_ENABLED:true}
+    description: "Enable post-quantum cryptography (Kyber/Dilithium)."
+    validation: "boolean"
+
+aws_integration:
+  iot_endpoint: 
+    value: "${MESH_IOT_ENDPOINT:}"
+    description: "AWS IoT endpoint for real-time notifications."
+    validation: "string, optional"
+  redis_cache_ttl_sec: 
+    value: ${MESH_REDIS_CACHE_TTL_SEC:300}
+    description: "TTL for Redis cache entries (seconds)."
+    validation: "integer, min=60, max=3600"
+
+# End of mesh_settings.yaml

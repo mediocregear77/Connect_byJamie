@@ -1,0 +1,122 @@
+```yaml
+# ai_config.yaml: Optimized AI Core and Cognitive Seed Configuration for Connection by Jamie
+# Defines parameters for cognitive seed, anomaly detection, micro-playbooks, federated learning, and trust market.
+# Values can be overridden by environment variables prefixed with AI_ (e.g., AI_MODEL_PATH).
+
+cognitive_seed:
+  model_path: 
+    value: "${AI_MODEL_PATH:../model_weights/seed_model.pt.enc}"
+    description: "Path to encrypted Cognitive Seed model weights (secured with KMS)."
+    validation: "string, min_length=8, max_length=256"
+  attestation_enabled: 
+    value: ${AI_ATTESTATION_ENABLED:true}
+    description: "Enable TPM-backed attestation for model integrity (requires tpm_attest.py)."
+    validation: "boolean"
+  auto_update: 
+    value: ${AI_AUTO_UPDATE:true}
+    description: "Enable automatic model updates from trusted source."
+    validation: "boolean"
+  update_check_interval_min: 
+    value: ${AI_UPDATE_CHECK_INTERVAL_MIN:30}
+    description: "Interval for checking model updates (minutes). Reduced for faster updates."
+    validation: "integer, min=10, max=1440"
+
+harmony_index:
+  min_value: 
+    value: ${AI_HARMONY_MIN_VALUE:0.0}
+    description: "Minimum value for Harmony Index (used in bedrock.py)."
+    validation: "float, min=0.0, max=0.5"
+  max_value: 
+    value: ${AI_HARMONY_MAX_VALUE:1.0}
+    description: "Maximum value for Harmony Index."
+    validation: "float, min=0.5, max=1.0"
+  threshold_alert: 
+    value: ${AI_HARMONY_THRESHOLD_ALERT:0.5}
+    description: "Threshold for Harmony Index alert notifications. Raised for sensitivity."
+    validation: "float, min=0.3, max=0.8"
+  threshold_critical: 
+    value: ${AI_HARMONY_THRESHOLD_CRITICAL:0.3}
+    description: "Threshold for critical Harmony Index alerts. Raised for sensitivity."
+    validation: "float, min=0.1, max=0.5"
+
+anomaly_detection:
+  method: 
+    value: "${AI_ANOMALY_METHOD:gnn}"
+    description: "Anomaly detection method (gnn, isolation_forest, or autoencoder)."
+    validation: "enum[gnn, isolation_forest, autoencoder]"
+  detection_interval_sec: 
+    value: ${AI_DETECTION_INTERVAL_SEC:60}
+    description: "Interval for anomaly detection scans (seconds). Reduced for faster detection."
+    validation: "integer, min=30, max=300"
+  alert_on_detection: 
+    value: ${AI_ALERT_ON_DETECTION:true}
+    description: "Send alerts on anomaly detection (via IoT or public feed)."
+    validation: "boolean"
+
+micro_playbooks:
+  enable_user_proposals: 
+    value: ${AI_PLAYBOOK_USER_PROPOSALS:true}
+    description: "Allow users to propose micro-playbooks (via playbook_synth.py)."
+    validation: "boolean"
+  min_votes_to_activate: 
+    value: ${AI_PLAYBOOK_MIN_VOTES:5}
+    description: "Minimum votes required to activate a playbook. Increased for consensus."
+    validation: "integer, min=3, max=10"
+  auto_rollback_minutes: 
+    value: ${AI_PLAYBOOK_ROLLBACK_MINUTES:30}
+    description: "Time before automatic rollback of playbooks (minutes). Reduced for safety."
+    validation: "integer, min=10, max=120"
+
+federated_learning:
+  enabled: 
+    value: ${AI_FEDERATED_ENABLED:true}
+    description: "Enable federated learning for model updates."
+    validation: "boolean"
+  differential_privacy: 
+    value: ${AI_DIFFERENTIAL_PRIVACY:true}
+    description: "Enable differential privacy for federated learning."
+    validation: "boolean"
+  dp_epsilon: 
+    value: ${AI_DP_EPSILON:0.3}
+    description: "Epsilon value for differential privacy. Reduced for stronger privacy."
+    validation: "float, min=0.1, max=1.0"
+  aggregation_interval_min: 
+    value: ${AI_AGGREGATION_INTERVAL_MIN:15}
+    description: "Interval for model aggregation (minutes). Reduced for faster updates."
+    validation: "integer, min=5, max=60"
+
+trust_market:
+  update_interval_sec: 
+    value: ${AI_TRUST_UPDATE_INTERVAL_SEC:180}
+    description: "Interval for trust score updates (seconds). Reduced for responsiveness."
+    validation: "integer, min=60, max=600"
+  decay_rate_per_day: 
+    value: ${AI_TRUST_DECAY_RATE:0.005}
+    description: "Daily trust score decay rate. Reduced for slower decay."
+    validation: "float, min=0.001, max=0.05"
+
+security:
+  key_management: 
+    value: "${AI_KEY_MANAGEMENT:kms}"
+    description: "Key management system for model weights (kms, tpm, or local)."
+    validation: "enum[kms, tpm, local]"
+  audit_log_enabled: 
+    value: ${AI_AUDIT_LOG_ENABLED:true}
+    description: "Enable QLDB audit logging for AI operations."
+    validation: "boolean"
+  pqc_enabled: 
+    value: ${AI_PQC_ENABLED:true}
+    description: "Enable post-quantum cryptography (Kyber/Dilithium) for model security."
+    validation: "boolean"
+
+aws_integration:
+  iot_endpoint: 
+    value: "${AI_IOT_ENDPOINT:}"
+    description: "AWS IoT endpoint for real-time AI alerts."
+    validation: "string, optional"
+  redis_cache_ttl_sec: 
+    value: ${AI_REDIS_CACHE_TTL_SEC:300}
+    description: "TTL for Redis cache entries (seconds)."
+    validation: "integer, min=60, max=3600"
+
+# End of ai_config.yaml

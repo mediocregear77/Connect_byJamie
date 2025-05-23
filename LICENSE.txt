@@ -1,0 +1,60 @@
+```
+# Connection by Jamie — License
+Copyright (c) 2025 Jamie Terpening (byJamie)
+
+This software and all associated materials, files, documentation, and code (collectively, the "Project") are the sole intellectual property of Jamie Terpening ("byJamie"), except as otherwise specified herein.
+
+## Limited License for AWS Breaking Barriers Hackathon 2025
+
+Permission is hereby granted, free of charge, to any person or entity ("Licensee") obtaining a copy of this Project and associated documentation files (the "Software"), to use, copy, and modify the Software **solely for the purposes of judging, testing, evaluation, and demonstration** by Amazon Web Services, Inc. ("AWS"), Devpost, and designated Hackathon Judges and staff, in strict accordance with the **AWS Breaking Barriers Hackathon Official Rules** (updated April 22, 2024, available at https://aws-breaking-barriers.devpost.com/rules), and subject to the following terms and conditions:
+
+### 1. Sole Ownership
+The Project, including all code, documentation, and associated materials, is the **exclusive property** of Jamie Terpening ("byJamie"). No rights are granted for commercial use, redistribution, sublicensing, or any other purpose except as explicitly required for Hackathon evaluation and public code demonstration.
+
+### 2. Permitted Uses
+Licensees are permitted to:
+- **Evaluate and Test**: Use the Software for Hackathon evaluation, testing, and demonstration by AWS, Devpost, and designated Hackathon Judges, as outlined in the Official Rules.
+- **Public Viewing**: Access the Software in open-source repositories as required by the Hackathon for transparency and evaluation.
+- **Educational Reference**: Reference the Software for educational purposes by Hackathon participants and interested parties, provided no derivative works are created, published, or distributed.
+
+### 3. Prohibited Uses
+The following actions are **strictly prohibited** without express written consent from Jamie Terpening:
+- **Commercial Use**: Any commercial use, sale, or monetization of the Software or Project.
+- **Redistribution**: Redistribution, sharing, or publication of the Software outside the scope of Hackathon evaluation.
+- **Sublicensing**: Granting sublicenses or transferring rights to third parties.
+- **Derivative Works**: Creating, publishing, or distributing derivative works based on the Software.
+- **License Modification**: Removing or modifying this license, copyright notices, or author attribution.
+
+### 4. Security and Confidentiality
+- The Software includes sensitive components (e.g., encrypted credentials in `admin_core/admin_secrets/`, model weights in `data/model_weights/`) that are protected by post-quantum cryptography (`kyber.py`, `dilithium.py`) and TPM attestation (`tpm_attest.py`). Licensees must not attempt to access, decrypt, or reverse-engineer these components.
+- Admin credentials and other sensitive data are provided separately in a secure, password-protected manner for Hackathon evaluation only (contact Jamie Terpening for access).
+- All actions performed with the Software are logged immutably to AWS QLDB (`qldb_logger.py`) and published to public feeds (`public_feed.py`) for auditability, per the Truth Beacon Protocol.
+
+### 5. Warranty Disclaimer
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL JAMIE TERPENING BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+### 6. Attribution
+All use, reference, or demonstration of the Project must include the following attribution:
+> Connection by Jamie, Copyright (c) 2025 Jamie Terpening. All rights reserved. Created for the AWS Breaking Barriers Hackathon 2025.
+
+### 7. Termination
+This license is effective until the conclusion of the AWS Breaking Barriers Hackathon 2025 or until terminated by Jamie Terpening. Upon termination, Licensees must cease all use of the Software and destroy any copies in their possession, except as required for Hackathon archival purposes.
+
+### 8. Governing Law
+This license shall be governed by and construed in accordance with the laws of the State of Washington, USA, without regard to its conflict of law principles. Any disputes arising under this license shall be resolved in the state or federal courts located in King County, Washington.
+
+### 9. Contact
+For inquiries regarding the use of the Software, permissions, or rights beyond the scope of this license, contact:
+- **Jamie Terpening**, Owner, Connection by Jamie
+- [email_jamie@nexxusos.com, as noted in README.md and WHITEPAPER.md]
+
+## References
+- **AWS Breaking Barriers Hackathon Official Rules**: https://aws-breaking-barriers.devpost.com/rules
+- **Project Overview**: [README.md](./README.md)
+- **Technical Details**: [WHITEPAPER.md](./WHITEPAPER.md)
+- **API Documentation**: [API_REFERENCE.md](./API_REFERENCE.md)
+- **Deployment Instructions**: [deployment/aws_deploy.yaml](./deployment/aws_deploy.yaml)
+
+---
+**Connection by Jamie: A quantum-secure, user-governed digital civilization for a transparent and resilient future.**
+```

@@ -1,0 +1,108 @@
+```yaml
+# law_params.yaml: Optimized Mesh Law and Compliance Parameters for Connection by Jamie
+# Defines parameters for PBFT consensus, mesh law governance, privacy compliance, witness statements, and NGO access.
+# Values can be overridden by environment variables prefixed with LAW_ (e.g., LAW_QUORUM_RATIO).
+
+pbft:
+  quorum_ratio:
+    value: ${LAW_QUORUM_RATIO:0.67}
+    description: "Ratio of nodes required for PBFT quorum (aligned with mesh_settings.yaml)."
+    validation: "float, min=0.51, max=0.9"
+  vote_timeout_sec:
+    value: ${LAW_VOTE_TIMEOUT_SEC:10}
+    description: "Timeout for PBFT vote collection (seconds). Reduced for faster consensus."
+    validation: "integer, min=5, max=30"
+  view_change_timeout_sec:
+    value: ${LAW_VIEW_CHANGE_TIMEOUT_SEC:45}
+    description: "Timeout for PBFT view change (seconds). Reduced for quicker recovery."
+    validation: "integer, min=30, max=120"
+
+mesh_law:
+  enable_local_constitution:
+    value: ${LAW_ENABLE_LOCAL_CONSTITUTION:true}
+    description: "Enable local constitution for community governance (enforced by mesh_law.py)."
+    validation: "boolean"
+  allow_community_mips:
+    value: ${LAW_ALLOW_COMMUNITY_MIPS:true}
+    description: "Allow community Mesh Improvement Proposals (MIPs)."
+    validation: "boolean"
+  mip_min_votes:
+    value: ${LAW_MIP_MIN_VOTES:7}
+    description: "Minimum votes required for MIP approval. Increased for stronger consensus."
+    validation: "integer, min=3, max=15"
+  mip_approval_quorum:
+    value: ${LAW_MIP_APPROVAL_QUORUM:0.65}
+    description: "Quorum ratio for MIP approval. Slightly increased for robustness."
+    validation: "float, min=0.5, max=0.8"
+  conflict_resolution_policy:
+    value: "${LAW_CONFLICT_RESOLUTION_POLICY:global_guideline_priority}"
+    description: "Policy for resolving governance conflicts (global_guideline_priority, local_priority, or arbitration)."
+    validation: "enum[global_guideline_priority, local_priority, arbitration]"
+
+privacy_compliance:
+  gdpr_enabled:
+    value: ${LAW_GDPR_ENABLED:true}
+    description: "Enable GDPR compliance for data processing."
+    validation: "boolean"
+  ccpa_enabled:
+    value: ${LAW_CCPA_ENABLED:true}
+    description: "Enable CCPA compliance for data processing."
+    validation: "boolean"
+  right_to_be_forgotten:
+    value: ${LAW_RIGHT_TO_BE_FORGOTTEN:true}
+    description: "Enable right to be forgotten for user data."
+    validation: "boolean"
+  breach_notification_sec:
+    value: ${LAW_BREACH_NOTIFICATION_SEC:180}
+    description: "Time to notify users of data breaches (seconds). Reduced for faster response."
+    validation: "integer, min=60, max=600"
+  data_retention_days:
+    value: ${LAW_DATA_RETENTION_DAYS:180}
+    description: "Data retention period (days). Reduced for privacy compliance."
+    validation: "integer, min=90, max=730"
+
+witness_statements:
+  allowed_types:
+    value: ["${LAW_WITNESS_TYPE_1:human_rights_violation}", "${LAW_WITNESS_TYPE_2:forced_displacement}", "${LAW_WITNESS_TYPE_3:aid_denied}", "${LAW_WITNESS_TYPE_4:free_expression_blocked}", "${LAW_WITNESS_TYPE_5:censorship_event}"]
+    description: "Allowed types for witness statements (aligned with witness_statement.py)."
+    validation: "array, items=enum[human_rights_violation, forced_displacement, aid_denied, free_expression_blocked, censorship_event]"
+  expiration_days:
+    value: ${LAW_WITNESS_EXPIRATION_DAYS:1095}
+    description: "Expiration period for witness statements (days). Reduced to 3 years for compliance."
+    validation: "integer, min=365, max=3650"
+
+ngo_access:
+  approved_ngos:
+    value: ["${LAW_NGO_1:AmnestyInternational}", "${LAW_NGO_2:HumanRightsWatch}", "${LAW_NGO_3:DoctorsWithoutBorders}", "${LAW_NGO_4:FreedomHouse}"]
+    description: "List of approved NGOs for report access (aligned with ngo_api.py)."
+    validation: "array, items=string, min_length=1, max_length=50"
+  onion_route_required:
+    value: ${LAW_ONION_ROUTE_REQUIRED:true}
+    description: "Require onion routing for NGO report delivery (via onion_router.py)."
+    validation: "boolean"
+
+security:
+  key_management:
+    value: "${LAW_KEY_MANAGEMENT:kms}"
+    description: "Key management system for compliance data (kms, tpm, or local)."
+    validation: "enum[kms, tpm, local]"
+  audit_log_enabled:
+    value: ${LAW_AUDIT_LOG_ENABLED:true}
+    description: "Enable QLDB audit logging for compliance operations."
+    validation: "boolean"
+  pqc_enabled:
+    value: ${LAW_PQC_ENABLED:true}
+    description: "Enable post-quantum cryptography (Kyber/Dilithium) for compliance."
+    validation: "boolean"
+
+aws_integration:
+  iot_endpoint:
+    value: "${LAW_IOT_ENDPOINT:}"
+    description: "AWS IoT endpoint for real-time compliance alerts."
+    validation: "string, optional"
+  redis_cache_ttl_sec:
+    value: ${LAW_REDIS_CACHE_TTL_SEC:300}
+    description: "TTL for Redis cache entries (seconds)."
+    validation: "integer, min=60, max=3600"
+
+# End of law_params.yaml
